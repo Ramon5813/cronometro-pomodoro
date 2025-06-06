@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cronômetro Pomodoro</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 0.2em;
+    }
+    #timer {
+      font-size: 5rem;
+      margin: 20px 0;
+      font-weight: bold;
+      color: #d95550;
+    }
+    #status {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #555;
+    }
+    .botoes {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #d95550;
+      border: none;
+      color: white;
+      font-size: 1.1rem;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #b24340;
+    }
+    #ciclos {
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Cronômetro Pomodoro</h1>
+  <div id="status">Preparado para trabalhar</div>
+  <div id="timer">25:00</div>
+
+  <div class="botoes">
+    <button id="start">▶ Iniciar</button>
+    <button id="pause" disabled>⏸ Pausar</button>
+    <button id="reset">⏹ Resetar</button>
+  </div>
+
+  <div id="ciclos">Ciclos concluídos: 0</div>
+
+  <audio id="beep-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+  <script>
+    const timerEl = document.getElementById('timer');
+    const statusEl = document.getElementById('status');
+    const ciclosEl = document.getElementById('ciclos');
+    const startBtn = document.getElementById('start');
+    const pauseBtn = document.getElementById('pause');
+    const resetBtn = document.getElementById('reset');
+    const beepSound = document.getElementById('beep-sound');
+
+    // Durações em segundos
+    const TEMPO_TRABALHO = 25 * 60; // 25 minutos
+    const TEMPO_PAUSA = 5 * 60; // 5 minutos
+
+    let tempoRestante = TEMPO_TRABALHO;
+    let trabalhando = true; // true = trabalho, false = pausa
+    let timerInterval = null;
+    let ciclosConcluidos = 0;
+
+    function formatarTempo(segundos) {
+      const min = String(Math.floor(segundos / 60)).padStart(2, '0');
+      const seg = String(segundos % 60).padStart(2, '0');
+      return `${min}:${seg}`;
+    }
+
+    function atualizarDisplay() {
+      timerEl.textContent = formatarTempo(tempoRestante);
+      statusEl.textContent = trabalhando ? 'Hora de trabalhar!' : 'Hora de descansar!';
+      ciclosEl.textContent = `Ciclos concluídos: ${ciclosConcluidos}`;
+      timerEl.style.color = trabalhando ? '#d95550' : '#4caf50';
+    }
+
+    function tocarAlerta() {
+      beepSound.play();
+    }
+
+    function trocarModo() {
+      tocarAlerta();
+      trabalhando = !trabalhando;
+      tempoRestante = trabalhando ? TEMPO_TRABALHO : TEMPO_PAUSA;
+
+      if (trabalhando) ciclosConcluidos++;
+      atualizarDisplay();
+    }
+
+    function iniciarTimer() {
+      if (timerInterval) return; // já rodando
+
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+
+      timerInterval = setInterval(() => {
+        if (tempoRestante > 0) {
+          tempoRestante--;
+          atualizarDisplay();
+        } else {
+          trocarModo();
+        }
+      }, 1000);
+    }
+
+    function pausarTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    }
+
+    function resetarTimer() {
+      pausarTimer();
+      tempoRestante = TEMPO_TRABALHO;
+      trabalhando = true;
+      ciclosConcluidos = 0;
+      atualizarDisplay();
+
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    }
+
+    // Eventos dos botões
+    startBtn.addEventListener('click', iniciarTimer);
+    pauseBtn.addEventListener('click', pausarTimer);
+    resetBtn.addEventListener('click', resetarTimer);
+
+    // Inicializa display
+    atualizarDisplay();
+  </script>
+
+</body>
+</html>
